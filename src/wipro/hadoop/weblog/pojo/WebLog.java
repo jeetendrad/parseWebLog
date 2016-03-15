@@ -11,4 +11,5 @@ public interface WebLog {
 	public static String SEARCH_KEY_WORDS = "Search key words";
 	public static String USER_BROWSER = "User browser";
 	public static String USER_URL = "User Url";
+	public static String LOG_DATE = "Log Date";
 }

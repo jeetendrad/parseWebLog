@@ -5,6 +5,9 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.*;
@@ -23,6 +26,7 @@ public class WebLogParser implements WebLog {
 	public static final String webLogEntryPattern = "^([\\d.]+) (\\S+) (\\S+) \\[([\\w:/]+\\s[+\\-]\\d{4})\\] \"(.+?)\" (\\d{3})[\\s?](?:(\\d+)|\\S) \"([^\"]+)\" \"([^\"]+)\"";
 	public static final String searchQueryPattern = "(.*?)q=(.*?)(?:&(.*?)|$)";
 	public static final String userUrlEntryPattern = "(http|https)://(.*?)[/\\)\\?\\s$]";
+	public static final String userDateEntryPattern = "^(.*?):(.*?)";
 		
 	public static Map<String, String> parse(String webLogString) {
 		
@@ -41,6 +45,7 @@ public class WebLogParser implements WebLog {
 		
 		Pattern searchQueryattern = Pattern.compile(searchQueryPattern);
 		Pattern userUrlpattern = Pattern.compile(userUrlEntryPattern);
+		Pattern userDatepattern = Pattern.compile(userDateEntryPattern);
 		
 		if (!matcherWebLog.matches() || 
 				NUM_FIELDS != matcherWebLog.groupCount()) {
@@ -51,7 +56,29 @@ public class WebLogParser implements WebLog {
 		//System.out.println("IP Address: " + matcherWebLog.group(1));
 		webLogMap.put(IP_ADDRESS, matcherWebLog.group(1));
 		//System.out.println("Date&Time: " + matcherWebLog.group(4));
-		webLogMap.put(DATE_TIME, matcherWebLog.group(4));
+		String dateTimeStr = matcherWebLog.group(4);
+		if(!dateTimeStr.isEmpty()) {
+			webLogMap.put(DATE_TIME, dateTimeStr);	
+			Matcher matcherUserDate = userDatepattern.matcher(dateTimeStr);
+			if(matcherUserDate.find()) {
+				//System.out.println("Logging Date: " + matcherUserDate.group(1));
+				SimpleDateFormat simpleDF = new SimpleDateFormat ("dd/MMM/yyyy"); //07/Aug/2009
+				SimpleDateFormat newSimpleDF = new SimpleDateFormat ("yyyy-MM-dd"); //2009-Aug-07
+				
+				try {
+					Date logDateFormatted = simpleDF.parse(matcherUserDate.group(1).toString());
+					
+					webLogMap.put(LOG_DATE, newSimpleDF.format(logDateFormatted).toString());	
+				} catch (ParseException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
+
+			}
+			
+		}
+		
 		//System.out.println("Request: " + matcherWebLog.group(5));
 		webLogMap.put(REQUEST_TYPE, matcherWebLog.group(5));
 		//System.out.println("Response: " + matcherWebLog.group(6));
@@ -136,6 +163,7 @@ public class WebLogParser implements WebLog {
 			    	}
 			    	System.out.println("Browser: " + webLogMapObj.get(USER_BROWSER));
 			    	System.out.println("User Url: " + webLogMapObj.get(USER_URL));
+			    	System.out.println("Log Date: " + webLogMapObj.get(LOG_DATE));
 			    }
 				
 			} catch (IOException e) {

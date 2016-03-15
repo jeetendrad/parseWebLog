@@ -86,5 +86,6 @@
 	<classpathentry kind="lib" path="/usr/lib/hadoop/client-0.20/xz-1.0.jar"/>
 	<classpathentry kind="lib" path="/usr/lib/hadoop/client-0.20/zookeeper.jar"/>
 	<classpathentry kind="lib" path="/usr/lib/hadoop/client-0.20/zookeeper-3.4.5-cdh4.7.0.jar"/>
+	<classpathentry kind="lib" path="/home/cloudera/Jeetendra/weblog/jar/json-simple-1.1.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

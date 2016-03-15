@@ -3,11 +3,14 @@ package wipro.hadoop.weblog.parser;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.Map;
 
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
+import org.json.simple.JSONObject;
 
 import wipro.hadoop.weblog.pojo.WebLog;
 
@@ -22,6 +25,7 @@ public class WebLogWritable implements Writable,WebLog {
 	private Text SearchKeyWords;
 	private Text UserBrowser;
 	private Text UserUrl;
+	private Text LogDate;
 
 	public WebLogWritable() {
 		super();
@@ -35,6 +39,7 @@ public class WebLogWritable implements Writable,WebLog {
 		this.SearchKeyWords = new Text();
 		this.UserBrowser = new Text();
 		this.UserUrl = new Text();
+		this.LogDate = new Text();
 	}
 	
 	public void set(Map<String, String> webLogMapObj) {
@@ -54,6 +59,7 @@ public class WebLogWritable implements Writable,WebLog {
 
 		this.UserBrowser.set(webLogMapObj.get(USER_BROWSER));
 		this.UserUrl.set(webLogMapObj.get(USER_URL));
+		this.LogDate.set(webLogMapObj.get(LOG_DATE));
 	}
 	
 	public Text getIpAddress() {
@@ -128,6 +134,15 @@ public class WebLogWritable implements Writable,WebLog {
 		UserUrl = userUrl;
 	}
 
+	
+	public Text getLogDate() {
+		return LogDate;
+	}
+
+	public void setLogDate(Text logDate) {
+		LogDate = logDate;
+	}
+
 	@Override
 	public void readFields(DataInput input) throws IOException {
 		IpAddress.readFields(input);
@@ -139,6 +154,7 @@ public class WebLogWritable implements Writable,WebLog {
 		SearchKeyWords.readFields(input);
 		UserBrowser.readFields(input);
 		UserUrl.readFields(input);
+		LogDate.readFields(input);
 	}
 
 	@Override
@@ -152,30 +168,68 @@ public class WebLogWritable implements Writable,WebLog {
 		SearchKeyWords.write(output);
 		UserBrowser.write(output);
 		UserUrl.write(output);
+		LogDate.write(output);
 	}
 
 	public Text toJson() {
 		
 		String searchKw = SearchKeyWords.toString();
+		String jsonRecord = "";
 		
-		String keyWords = "";
+		JSONObject webLogJsonObj = new JSONObject();
+		webLogJsonObj.put("ip_address",IpAddress.toString());
+		webLogJsonObj.put("date_time",DateTime.toString());
+		webLogJsonObj.put("request_type",RequestType.toString());
+		webLogJsonObj.put("response_status",ResponseStatus.get());
+		webLogJsonObj.put("response_byte",ResponseByte.get());
+		webLogJsonObj.put("reffer_url",RefferUrl.toString());
+		
+		String[] keyWords;
+		ArrayList keyWordsArr = new ArrayList();
 		if(!searchKw.isEmpty()){
-			keyWords = searchKw.replaceAll(" ", "','");	
-			keyWords = "'" + keyWords + "'";
+			keyWords = searchKw.split(" ");
+			if(keyWords.length>0){
+				for (String kw: keyWords) {
+					keyWordsArr.add(kw);
+				}				
+			}
+
+		}
+		webLogJsonObj.put("search_keywords",keyWordsArr);
+		webLogJsonObj.put("user_browser",UserBrowser.toString());
+		webLogJsonObj.put("user_url",UserUrl.toString());
+		webLogJsonObj.put("log_date",LogDate.toString());
+		
+	      StringWriter strOutput = new StringWriter();
+	      try {
+	    	  webLogJsonObj.writeJSONString(strOutput);
+	    	  jsonRecord = webLogJsonObj.toString();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	      
+/*		String keyWords = "";
+		if(!searchKw.isEmpty()){
+			keyWords = searchKw.replaceAll("\"", "");
+			keyWords = searchKw.replaceAll(" ", "\",\"");	
+			keyWords = "\"" + keyWords + "\"";
 		}
 
 		
 		String jsonRecord = "{" +
-							"\"IpAddress\":\"" + IpAddress +"\"," +
-							"\"DateTime\":\"" + DateTime +"\"," +
-							"\"RequestType\":\"" + RequestType +"\"," +
-							"\"ResponseStatus\":" + ResponseStatus +"," +
-							"\"ResponseByte\":" + ResponseByte +"," +
-							"\"RefferUrl\":\"" + RefferUrl +"\"," +
-							"\"SearchKeyWords\":[" + keyWords +"]," +
-							"\"UserBrowser\":\"" + UserBrowser +"\"," +
-							"\"UserUrl:\"" + UserUrl + "\"" +
+							"\"ip_address\":\"" + IpAddress +"\"," +
+							"\"date_time\":\"" + DateTime +"\"," +
+							"\"request_type\":\"" + RequestType +"\"," +
+							"\"response_status\":" + ResponseStatus +"," +
+							"\"response_byte\":" + ResponseByte +"," +
+							"\"reffer_url\":\"" + RefferUrl +"\"," +
+							"\"search_keywords\":[" + keyWords +"]," +
+							"\"user_browser\":\"" + UserBrowser +"\"," +
+							"\"user_url\":\"" + UserUrl +"\"," +
+							"\"log_date\":\"" + LogDate + "\"" +
 							"}";
+*/		
 		return new Text(jsonRecord);
 	}
 }

@@ -1,7 +1,10 @@
 package wipro.hadoop.weblog.parser;
 
+import java.net.URI;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
@@ -25,6 +28,13 @@ public class WebLogDriver extends Configured implements Tool{
 		// configure input and output source
 		WebLogInputFormat.addInputPath(job, new Path(args[0]));
 		TextOutputFormat.setOutputPath(job, new Path(args[1]));
+		
+	    try{
+	    		DistributedCache.addFileToClassPath(new Path("/user/cloudera/hadoopjars/json-simple-1.1.1.jar"), job.getConfiguration());
+	        }catch(Exception e){
+	        	System.out.println(e);
+	        }
+
 		
 		job.setInputFormatClass(WebLogInputFormat.class);
 		job.setOutputFormatClass(TextOutputFormat.class);
